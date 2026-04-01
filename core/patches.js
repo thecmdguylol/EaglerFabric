@@ -6,11 +6,16 @@ class PatchesRegistry {
         return `
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
-    globalThis.modapi_specialevents = [
-        ${PatchesRegistry.patchedEventNames.flatMap(x => `'${x}'`).join(',')}
-    ];
+globalThis.modapi_specialevents = [${PatchesRegistry.patchedEventNames.map(x => `'${x}'`).join(',')}];
 </script>
 `;
+    }
+
+    static applyEventInjector(html) {
+        return html.replace(
+            "</head>",
+            PatchesRegistry.getEventInjectorCode() + "</head>"
+        );
     }
 
     static patchFile(x) {
@@ -19,6 +24,11 @@ class PatchesRegistry {
             current = fn(current);
         });
         return current;
+    }
+
+    static patchHTML(html) {
+        html = PatchesRegistry.applyEventInjector(html);
+        return html;
     }
 
     static addPatch(fn) {
@@ -30,13 +40,8 @@ class PatchesRegistry {
     }
 }
 
-// PatchesRegistry.regSpecialEvent('test');
-// PatchesRegistry.addPatch(function (input) {
-//     var output = input;
-//     return output;
-// })
-
 PatchesRegistry.regSpecialEvent('render');
+
 PatchesRegistry.addPatch(function (input) {
     var output = input.replaceAll(
         /continue main;\s+?}\s+?if\s?\(!\$this.\$renderHand\)/gm,
