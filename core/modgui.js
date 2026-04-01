@@ -3,26 +3,26 @@ const modapi_guikit = "(" + (() => {
   // ModAPI GUI made by TheIdiotPlays
   // https://github.com/TheIdiotPlays
   var splashes = [
-    "Now with A.I.D.S (automatically injected dedicated server)",
-    "Only causes death 90% of the time!",
-    "HTML is better.",
-    "https://github.com/EaglerForge",
-    "hey you should check out https://github.com/ZXMushroom63/scratch-gui",
-    "99% of people stop gambling before they win big.",
-    "Now with free estradiol!",
-    "Now with H.I.V (Hyper Injected Virtual-debugger)",
+    "EaglerFabric!",
+    "Only causes brain damage 100% of the time!",
+    "I hate this.",
+    "https://github.com/thecmdguylol/EaglerFabric",
+    "hey you should check out https://github.com/EaglerForge",
+    "99% of people stop gambling before they win big. (so don't quit)",
+    "Now with free mod packs!",
+    "Such funs!",
     "asdasd",
-    "Star us on GitHub to support us! https://github.com/EaglerForge/EaglerForgeInjector"
+    "Star us on GitHub to support us! https://github.com/thecmdguylol/EaglerFabricr"
   ];
   var gui = `<div id="modapi_gui_container">
       <header>
-        <h1 class="title">EaglerForge Mod Manager</h1>
+        <h1 class="title">EaglerFabric Mod Manager</h1>
         <h4>
-          <!-- Now with with A.I.D.S. (automatically injected dedicated server)! -->
+          <!-- Only causes brain damage 100% of the time! -->
            {splash_msg}
         </h4>
         <h5>
-          Warning: installing malicious mods can delete your worlds, ip-grab you, or even download more serious malware onto your computer. The EaglerForge developers are not liable for any damage caused by the use of EaglerForge and its related tools.
+          WARNING: installing malicious mods can delete your worlds, ip-grab you, or even download more serious malware onto your computer. The EaglerFabric developers are not liable for any damage caused by the use of EaglerFabric and its related tools.
         </h5>
       </header>
 
@@ -43,8 +43,8 @@ const modapi_guikit = "(" + (() => {
       </table>
 
       <div class="controls">
-        <button class="button" onclick="window.modapi_uploadmod()">Upload Mod (.js)</button>
-        <button class="button" onclick="window.modapi_addmod()">Add Mod From URL</button>
+        <button class="button" onclick="window.modapi_uploadmod()">Upload Mod/Modpack (.js/.efpack/.zip)</button>
+        <button class="button" onclick="window.modapi_addmod()">Add Mod/Modpack From URL</button>
         <button class="button" style="text-shadow: 0px 0px 10px rgba(255, 0, 0, 0.5)" onclick="window.modapi_clearmods()">Clear All Mods</button>
         <button class="button _doneButton" onclick="this.parentElement.parentElement.remove();">Done</button>
       </div>
