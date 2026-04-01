@@ -12,7 +12,7 @@ const modapi_guikit = "(" + (() => {
     "Now with free mod packs!",
     "Such funs!",
     "asdasd",
-    "Star us on GitHub to support us! https://github.com/thecmdguylol/EaglerFabricr"
+    "Star us on GitHub to support us! https://github.com/thecmdguylol/EaglerFabric"
   ];
   var gui = `<div id="modapi_gui_container">
       <header>
