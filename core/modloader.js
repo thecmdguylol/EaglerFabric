@@ -39,7 +39,7 @@ const modapi_modloader = "(" + (() => {
         const transaction = db.transaction(["filesystem"], "readonly");
         const objectStore = transaction.objectStore("filesystem");
         const object = await promisifyIDBRequest(objectStore.get("mods/" + mod));
-        var out =  object ? (await object.text()) : "";
+        var out = object ? (await object.text()) : "";
         db.close();
         return out;
     }
@@ -96,161 +96,123 @@ const modapi_modloader = "(" + (() => {
     }
 
     globalThis.resetMods = async function resetMods() {
-        console.log("Resetting mods...");
         const db = await getDatabase();
         const transaction = db.transaction(["filesystem"], "readwrite");
         const objectStore = transaction.objectStore("filesystem");
         await promisifyIDBRequest(objectStore.clear());
-        console.log("Mods reset");
         db.close();
+    }
+
+    async function extractArchiveMods(file, modsArr) {
+        const zip = await JSZip.loadAsync(file);
+
+        const entries = Object.keys(zip.files);
+
+        for (let path of entries) {
+            if (!path.endsWith(".js")) continue;
+
+            const content = await zip.files[path].async("string");
+
+            const modName = "archive@" + file.name + ":" + path;
+
+            await addFileMod(modName, content);
+
+            modsArr.push(modName);
+        }
     }
 
     globalThis.modLoader = async function modLoader(modsArr = []) {
         if (!window.eaglerMLoaderMainRun) {
             var searchParams = new URLSearchParams(location.search);
+
             searchParams.getAll("mod").forEach((modToAdd) => {
-                console.log(
-                    "[EaglerML] Adding mod to loadlist from search params: " + modToAdd
-                );
                 modsArr.push("web@" + modToAdd);
             });
+
             searchParams.getAll("plugin").forEach((modToAdd) => {
-                console.log(
-                    "[EaglerML] Adding mod to loadlist from search params: " + modToAdd
-                );
                 modsArr.push("web@" + modToAdd);
             });
-            if (
-                !!eaglercraftXOpts &&
-                !!eaglercraftXOpts.Mods &&
-                Array.isArray(eaglercraftXOpts.Mods)
-            ) {
+
+            if (window.eaglercraftXOpts?.Mods && Array.isArray(eaglercraftXOpts.Mods)) {
                 eaglercraftXOpts.Mods.forEach((modToAdd) => {
-                    console.log(
-                        "[EaglerML] Adding mod to loadlist from eaglercraftXOpts: " +
-                        modToAdd
-                    );
                     modsArr.push("web@" + modToAdd);
                 });
             }
 
-            console.log("[EaglerML] Searching in iDB");
             try {
                 var idbMods = await getMods();
-                modsArr = modsArr.concat(idbMods
-                    .filter(x => { return x && x.length > 0 })
-                );
-            } catch (error) {
-                console.error(error);
-            }
+                modsArr = modsArr.concat(idbMods.filter(x => x && x.length > 0));
+            } catch (error) {}
 
             window.eaglerMLoaderMainRun = true;
         }
+
         if (window.noLoadMods === true) {
             modsArr.splice(0, modsArr.length);
         }
-        function checkModsLoaded(totalLoaded, identifier) {
-            console.log(
-                "[EaglerML] Checking if mods are finished :: " +
-                totalLoaded +
-                "/" +
-                modsArr.length
-            );
-            if (totalLoaded >= modsArr.length) {
-                clearInterval(identifier);
-                window.ModGracePeriod = false;
-                if (
-                    window.eaglerMLoaderMainRun &&
-                    ModAPI &&
-                    ModAPI.events &&
-                    ModAPI.events.callEvent
-                ) {
-                    ModAPI.events.callEvent("load", {});
-                }
-                console.log(
-                    "[EaglerML] Checking if mods are finished :: All mods loaded! Grace period off."
-                );
-            }
-        }
-        function methodB(currentMod) {
-            try {
-                console.log("[EaglerML] Loading " + currentMod + " via method B.");
-                var script = document.createElement("script");
-                script.setAttribute("data-hash", ModAPI.util.hashCode("web@" + currentMod));
-                script.src = currentMod;
-                script.setAttribute("data-isMod", "true");
-                script.onerror = () => {
-                    console.log(
-                        "[EaglerML] Failed to load " + currentMod + " via method B!"
-                    );
-                    script.remove();
-                    totalLoaded++;
-                };
-                script.onload = () => {
-                    console.log(
-                        "[EaglerML] Successfully loaded " + currentMod + " via method B."
-                    );
-                    totalLoaded++;
-                };
-                document.body.appendChild(script);
-            } catch (error) {
-                console.log(
-                    "[EaglerML] Oh no! The mod " + currentMod + " failed to load!"
-                );
-                totalLoaded++;
-            }
-        }
+
         window.ModGracePeriod = true;
+
         var totalLoaded = 0;
         var loaderCheckInterval = null;
+
         modsArr.sort();
+
         for (let i = 0; i < modsArr.length; i++) {
             let currentMod = modsArr[i];
-            var isIDBMod = !currentMod.startsWith("web@");
-            if (!isIDBMod) {
-                currentMod = currentMod.replace("web@", "");
+            let isIDBMod = !currentMod.startsWith("web@");
+
+            if (!isIDBMod) currentMod = currentMod.replace("web@", "");
+
+            if (currentMod.endsWith(".zip") || currentMod.endsWith(".efpack")) {
+                try {
+                    const res = await fetch(currentMod);
+                    const blob = await res.blob();
+                    await extractArchiveMods(blob, modsArr);
+                    continue;
+                } catch (e) {
+                    continue;
+                }
             }
-            console.log("[EaglerML] Starting " + currentMod);
+
             try {
-                var responseText = isIDBMod ? await getMod(currentMod) : await (await fetch(currentMod)).text();
-                console.log("[EaglerML] Loading " + currentMod + " via method A.");
+                var responseText = isIDBMod
+                    ? await getMod(currentMod)
+                    : await (await fetch(currentMod)).text();
+
                 var script = document.createElement("script");
-                script.setAttribute("data-hash", ModAPI.util.hashCode((isIDBMod ? "" : "web@") + currentMod));
+
+                script.setAttribute(
+                    "data-hash",
+                    ModAPI.util.hashCode((isIDBMod ? "" : "web@") + currentMod)
+                );
+
                 try {
                     script.src =
                         "data:text/javascript," + encodeURIComponent(responseText);
                 } catch (error) {
-                    methodB(currentMod);
-                    return;
+                    continue;
                 }
+
                 script.setAttribute("data-isMod", "true");
-                script.onerror = () => {
-                    console.log(
-                        "[EaglerML] Failed to load " + currentMod + " via method A!"
-                    );
-                    script.remove();
-                    totalLoaded++;
-                };
-                script.onload = () => {
-                    console.log(
-                        "[EaglerML] Successfully loaded " + currentMod + " via method A."
-                    );
-                    totalLoaded++;
-                };
+
+                script.onload = () => totalLoaded++;
+                script.onerror = () => totalLoaded++;
+
                 document.body.appendChild(script);
-            } catch (error) {
-                methodB(currentMod);
-            }
+            } catch (error) {}
         }
+
         loaderCheckInterval = setInterval(() => {
-            checkModsLoaded(totalLoaded, loaderCheckInterval);
+            if (totalLoaded >= modsArr.length) {
+                clearInterval(loaderCheckInterval);
+                window.ModGracePeriod = false;
+
+                ModAPI?.events?.callEvent?.("load", {});
+            }
         }, 500);
-        console.log(
-            "[EaglerML] Starting to load " + modsArr.length + " mods..."
-        );
-        window.returnTotalLoadedMods = function returnTotalLoadedMods() {
-            return totalLoaded;
-        };
+
+        window.returnTotalLoadedMods = () => totalLoaded;
     };
 }).toString() + ")();"
 
