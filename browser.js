@@ -1,50 +1,33 @@
-document.querySelector("title").innerText = `EaglerForge Injector ${EFIConfig.ModAPIVersion}`;
-document.querySelector("h1").innerText = `EaglerForge Injector ${EFIConfig.ModAPIVersion}`;
+document.querySelector("#giveme")?.addEventListener("click", async () => {
+    const input = document.querySelector("input");
+    if (!input?.files?.[0]) return;
 
-document.querySelector("#giveme").addEventListener("click", () => {
-    if (
-        !document.querySelector("input").files ||
-        !document.querySelector("input").files[0]
-    ) {
-        return;
-    }
-    // @type File
-    var file = document.querySelector("input").files[0];
-    var fileType = file.name.split(".");
-    fileType = fileType[fileType.length - 1];
+    const file = input.files[0];
+    let fileType = file.name.split(".").pop();
 
-    file.text().then(async (string) => {
-        var patchedFile = string;
+    const string = await file.text();
 
-        EFIConfig.doServerExtras = false;
-        patchedFile = await patchClient(string, new DOMParser());
+    EFIConfig.doServerExtras = false;
+    const patchedFile = await patchClient(string, new DOMParser());
 
-        var blob = new Blob([patchedFile], { type: file.type });
-        saveAs(blob, "processed." + fileType);
-        backgroundLog("Saving file...", true);
-    });
+    const blob = new Blob([patchedFile], { type: file.type });
+    saveAs(blob, "processed." + fileType);
+    backgroundLog("Saving file...", true);
 });
 
-document.querySelector("#givemeserver").addEventListener("click", () => {
-    if (
-        !document.querySelector("input").files ||
-        !document.querySelector("input").files[0]
-    ) {
-        return;
-    }
-    // @type File
-    var file = document.querySelector("input").files[0];
-    var fileType = file.name.split(".");
-    fileType = fileType[fileType.length - 1];
+document.querySelector("#givemeserver")?.addEventListener("click", async () => {
+    const input = document.querySelector("input");
+    if (!input?.files?.[0]) return;
 
-    file.text().then(async (string) => {
-        var patchedFile = string;
+    const file = input.files[0];
+    let fileType = file.name.split(".").pop();
 
-        EFIConfig.doServerExtras = true;
-        patchedFile = await patchClient(string, new DOMParser());
+    const string = await file.text();
 
-        var blob = new Blob([patchedFile], { type: file.type });
-        saveAs(blob, "efserver." + fileType);
-        backgroundLog("Saving file...", true);
-    });
+    EFIConfig.doServerExtras = true;
+    const patchedFile = await patchClient(string, new DOMParser());
+
+    const blob = new Blob([patchedFile], { type: file.type });
+    saveAs(blob, "efserver." + fileType);
+    backgroundLog("Saving file...", true);
 });
